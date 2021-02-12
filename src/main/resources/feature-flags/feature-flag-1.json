@@ -1,0 +1,17 @@
+{
+  "name": "FF1",
+  "conditions": [
+    {
+      "type": "ENVIRONMENT",
+      "value": "TEST"
+    },
+    {
+      "type": "IP_RANGE",
+      "value": "192.0.0.0-192.0.0.255"
+    },
+    {
+      "type": "USER_NAME",
+      "value": "ondrej.altman"
+    }
+  ]
+}
