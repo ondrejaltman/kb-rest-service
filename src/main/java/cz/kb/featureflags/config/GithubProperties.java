@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 public class GithubProperties {
 
     private String user;
+    private String token;
     private String repository;
     private String branch;
 

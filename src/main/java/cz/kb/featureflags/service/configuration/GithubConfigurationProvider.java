@@ -2,19 +2,14 @@ package cz.kb.featureflags.service.configuration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import cz.kb.featureflags.config.GithubProperties;
 import cz.kb.featureflags.dto.configuration.ConfigurationDTO;
 import cz.kb.featureflags.dto.github.GithubFileDTO;
-import cz.kb.featureflags.dto.github.GithubFilesListDTO;
+import cz.kb.featureflags.service.GithubApiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -25,14 +20,13 @@ import java.util.Optional;
 public class GithubConfigurationProvider implements ConfigurationProvider {
 
     private final ObjectMapper objectMapper;
-    private final GithubProperties githubProperties;
-    private final RestTemplate restTemplate;
+    private final GithubApiService githubApiService;
 
     @Override
     public Optional<ConfigurationDTO> getConfiguration(final String name) {
-        for (GithubFileDTO githubFile : loadFileInfos()) {
+        for (GithubFileDTO githubFile : githubApiService.loadFileInfos()) {
             try {
-                Optional<String> fileContent = loadFileContent(githubFile.getPath());
+                Optional<String> fileContent = githubApiService.loadFileContent(githubFile.getPath());
                 if (fileContent.isEmpty()) {
                     continue;
                 }
@@ -47,30 +41,6 @@ public class GithubConfigurationProvider implements ConfigurationProvider {
         }
 
         return Optional.empty();
-    }
-
-    private List<GithubFileDTO> loadFileInfos() {
-        GithubFilesListDTO filesList;
-        try {
-            filesList = restTemplate.getForObject(githubProperties.getAllFilesUrl(), GithubFilesListDTO.class);
-        } catch (RestClientException e) {
-            log.warn("exception occurred during loading of list of files", e);
-            return Collections.emptyList();
-        }
-
-        return Optional.ofNullable(filesList)
-                .map(GithubFilesListDTO::getTree)
-                .orElse(Collections.emptyList());
-    }
-
-    private Optional<String> loadFileContent(final String path) {
-        try {
-            String fileContent = restTemplate.getForObject(githubProperties.getSingleFileUrl() + path, String.class);
-            return Optional.ofNullable(fileContent);
-        } catch (RestClientException e) {
-            log.warn("exception occurred during loading of file '{}' content", path, e);
-            return Optional.empty();
-        }
     }
 
 }
